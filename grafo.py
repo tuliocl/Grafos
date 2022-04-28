@@ -1,12 +1,21 @@
 class grafo:
-    def __init__(self):
-        self.lista_adj = [
-            [0,1,0,0], #A - 0
-            [0,0,1,0], #B - 1
-            [0,0,0,1], #C - 2
-            [1,0,0,0]  #D - 3
-            ]
+    def __init__(self,num_grafos):
+        self.lista_adj = []
 
+        for i in range(0,num_grafos):
+            lista = []
+            for j in range(0,num_grafos):
+                lista.append(int(input("Conexão do grafo {} para {}: ".format(i,j))))
+
+            self.lista_adj.append(lista)
+
+        self.distancias = []
+        self.anterior = []
+
+        for i in range(0,num_grafos):
+            self.distancias.append(100) #valor alto para representar inf
+            self.anterior.append(-1)   #-1 representa que não temos caminho 
+    
     def print_lista(self):
         for linha in self.lista_adj:
             print(linha)
@@ -22,10 +31,9 @@ class grafo:
             if(lista_atual[i] == 1):
                 return self.tem_caminho(destino,i)
 
-            
 
 def main():
-    instancia = grafo()
+    instancia = grafo(4)
     instancia.print_lista()
     print(instancia.tem_caminho(3,0))
 
