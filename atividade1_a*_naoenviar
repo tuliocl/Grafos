@@ -1,0 +1,150 @@
+import numpy as np
+import math
+
+class No:
+    def __init__(self,x,y):
+        self.father = None
+        self.children = []
+        self.posx = x
+        self.posy = y
+
+        self.weight = 0
+        self.cost = 0
+
+    def generate_children(self,occupancy,visited):
+        #isso aqui era pra ser tipo matriz[i][j]
+        #mas tava dando bug fazendo assim, entao eu tava extraindo a linha que queria (x) e olhando a coluna(y)
+
+        #olhando filho superior
+        if(self.posx - 1 >= 0):
+            superior_line = occupancy[self.posx - 1]
+            if(superior_line[self.posy] != np.inf):
+
+                child = No(self.posx - 1,self.posy)
+                child.father = self
+                child.cost = self.cost + superior_line[self.posy]
+
+                self.children.append(child)
+        #olhando filho inferior
+        if(self.posx + 1 < len(occupancy)):
+            inferior_line = occupancy[self.posx + 1]
+            if(inferior_line[self.posy] != np.inf):
+
+                child = No(self.posx + 1,self.posy)
+                child.father = self
+                child.cost = self.cost + inferior_line[self.posy]
+
+                self.children.append(child)
+        #olhando direita
+        line = occupancy[self.posx] #linha atual para olhar direita e esquerda
+        if(self.posy + 1 < len(occupancy)):
+            if(line[self.posy + 1] != np.inf):
+                child = No(self.posx, self.posy + 1)
+                child.father = self
+                child.cost = self.cost + line[self.posy + 1]
+
+                self.children.append(child)
+
+        #olhando esquerda
+        if(self.posy - 1 >= 0):
+            if(line[self.posy - 1] != np.inf):
+                child = No(self.posx, self.posy - 1)
+                child.father = self
+                child.cost = self.cost + line[self.posy - 1]
+
+                self.children.append(child)
+
+def heuristic(x,y,destiny):
+    return math.sqrt((destiny[0] - x)**2 + (destiny[1] - y)**2)
+
+def check_solution(current,robot_pos_d):
+    if(current.posx == robot_pos_d[0] and current.posy == robot_pos_d[1]):
+        return True
+    return False
+
+def robot_path(robot_pos_c, robot_pos_d, occupancy):
+    visited = create_visited_grid(occupancy)
+    path = []
+
+    robot_start_pos = No(robot_pos_c[0],robot_pos_c[1])
+    frontier = [robot_start_pos]
+
+    while(True):
+        current = frontier.pop(0) #tiro o proximo nó da fronteira
+
+        line = visited[current.posx]   
+        if(line[current.posy] == 1): #verifico se já foi visitado
+            continue
+        
+        if(check_solution(current,robot_pos_d)): #vejo se tó no destino
+            while(current.father != None):
+                path.append(current) 
+                current = current.father
+            break 
+
+        current.generate_children(occupancy,visited) #gero filho e coloco na fronteira
+        for i in current.children:
+            i.weight = i.cost + heuristic(i.posx,i.posy,robot_pos_d)
+            flag = False
+            for j in range(0,len(frontier)):
+                if(frontier[j].weight > i.weight):
+                    frontier.insert(j,i)
+                    flag = True
+                    break
+            if flag == False:
+                frontier.append(i)
+
+        line[current.posy] = 1 #marco esse local como visitado
+
+    return path
+
+def create_visited_grid(occupancy):
+    visited = []
+    for i in occupancy:
+        list = []
+        for j in range(0,len(i)):
+            list.append(0) 
+        visited.append(list)
+    return visited
+
+def create_path(choice):
+    if(choice == 1):
+        occupancy = np.ones((10, 10))
+        occupancy[0:5, 0] = np.inf
+        occupancy[5, 0:5] = np.inf
+        occupancy[5:8, 5] = np.inf
+        occupancy[0:3, 5:8] = np.inf
+        occupancy[7:9, 3] = np.inf
+        occupancy[5:10, 8] = np.inf
+    else:
+        occupancy = 10 * np.random.rand(10, 10)
+        occupancy[0:5, 0] = np.inf
+        occupancy[5, 0:5] = np.inf
+        occupancy[5:8, 5] = np.inf
+        occupancy[0:3, 5:8] = np.inf
+        occupancy[7:9, 3] = np.inf
+        occupancy[5:10, 8] = np.inf
+    
+    return occupancy
+
+def main():
+    choice = int(input("Primeira ou segunda versão(1 ou 2)? "))
+    occupancy = create_path(choice)
+
+    print(occupancy)
+
+    x = int(input("Ponto de partida (X): "))
+    y = int(input("Ponto de partida (Y): "))
+
+    robot_pos_c = [x,y]
+
+    x = int(input("Ponto de destino (X): "))
+    y = int(input("Ponto de destino (Y): "))
+
+    robot_pos_d = [x,y]
+    
+    path = robot_path(robot_pos_c, robot_pos_d,occupancy)
+    for i in path:
+        print(i.posx,i.posy)
+
+main()
