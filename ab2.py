@@ -143,22 +143,25 @@ def mstPrim(G,all_points,start):
 def verticeMaisProximo(all_points, point, V):
     #point é o ponto qualquer
     vertice = -1
-    menor_distancia = -1 #-1 -> flag que nao escolheu nenhum ainda
+    menor_distancia = np.inf
+
+    flag = False #Essa flag indica se encontramos algum vertice proximo
 
     iterador = 0
     for point_atual in all_points:
-        if(menor_distancia == -1 or (menor_distancia > point.distance(point_atual) and tem_visada(point,point_atual,V))):
+        if(menor_distancia >= point.distance(point_atual) and tem_visada(point,point_atual,V)):
             menor_distancia = point.distance(point_atual)
             vertice = iterador
+            flag = True
         iterador += 1
 
     #esse if ta verificando se o ponto que estamos interessados tem visada direta para o ponto que estamos analisando
     #e se tiver, vai ver se a distancia é menor que a que tem armazenado
 
-    if(vertice == -1):
+    if(flag == False):
         print("Não foi possível achar um vértice proximo do ponto fornecido.")
         print("Uma possível causa é que esse ponto não tenha visada direta para nenhum vertice ou que ele esteja dentro de um objeto")
-        print("Colocaremos o ponto inicial do arquivo como vertice mais proximo")
+        print("Colocaremos o ponto inicial do arquivo como vertice mais proximo\n")
         return all_points[0]
     else:
         return all_points[vertice] 
@@ -168,6 +171,9 @@ def computarCaminho(T, pos_inicial, pos_final,all_points,V):
     v_inicial = verticeMaisProximo(all_points,pos_inicial,V)
     v_final = verticeMaisProximo(all_points,pos_final,V)
 
+    print("O ponto mais proximo de ",pos_inicial," é ", v_inicial)
+    print("O ponto mais proximo de ",pos_final," é ", v_final)
+    
     if(v_inicial == v_final):
         print("Os pontos coincidem")
 
@@ -318,11 +324,14 @@ def Main():
 
 
     print("Caminhos com goal e start fornecidos pelo arquivo: ")
+
     #Achar caminho usando start e goal do arquivo:
     print("Árvore de Prim")
     computarCaminho(T_prim,start,goal,all_points,V)
 
     #Achar caminho com ponto fornecido pelo usuário
+
+    print("\n\nAgora iremos achar o caminho para um ponto qualquer\n")
 
     xo = float(input("Indique a coordenada X(Float) do ponto que deseja começar: "))
     yo = float(input("Indique a coordenada Y(Float) do ponto que deseja começar: "))
@@ -331,7 +340,7 @@ def Main():
     xf = float(input("Indique a coordenada X(Float) do ponto que deseja alcançar: "))
     yf = float(input("Indique a coordenada Y(Float) do ponto que deseja alcançar: "))
     goal = geometry.Point(xf,yf)
-    
+
     computarCaminho(T_prim,start,goal,all_points,V)
 
 
