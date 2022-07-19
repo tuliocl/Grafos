@@ -55,6 +55,7 @@ class Tree:
                 while(estado.pai != None):
                     caminho.insert(0,estado)
                     estado = estado.pai
+                caminho.insert(0,estado)
                 break
             
             estado.gerar_filhos(all_points,self.lista_adjacencias)
@@ -98,6 +99,8 @@ def extrair_minimo(fila,pesos):
     return escolhido
 
 def mstPrim(G,all_points,start):
+    #Essa função irá gerar duas listas (Pesos e Link) usando o ponto start do arquivo como ponto de partida
+    #As duas listas são passadas para a classe Tree que irá montar as arestas correspondentes
 
     fila = [] #Fila dos vértices que ainda não foram explorados (0 indica nao visitado, 1 já visitado)
     for i in range(0,len(all_points)):
@@ -135,6 +138,42 @@ def mstPrim(G,all_points,start):
     T = Tree()
     T.montar_prim(all_points,link,pesos)
     return T
+
+#------------- Essa função encontra o vertice mais proximo de um ponto qualquer
+def verticeMaisProximo(all_points, point, V):
+    #point é o ponto qualquer
+    vertice = -1
+    menor_distancia = -1 #-1 -> flag que nao escolheu nenhum ainda
+
+    iterador = 0
+    for point_atual in all_points:
+        if(menor_distancia == -1 or (menor_distancia > point.distance(point_atual) and tem_visada(point,point_atual,V))):
+            menor_distancia = point.distance(point_atual)
+            vertice = iterador
+        iterador += 1
+
+    #esse if ta verificando se o ponto que estamos interessados tem visada direta para o ponto que estamos analisando
+    #e se tiver, vai ver se a distancia é menor que a que tem armazenado
+
+    if(vertice == -1):
+        print("Não foi possível achar um vértice proximo do ponto fornecido.")
+        print("Uma possível causa é que esse ponto não tenha visada direta para nenhum vertice ou que ele esteja dentro de um objeto")
+        print("Colocaremos o ponto inicial do arquivo como vertice mais proximo")
+        return all_points[0]
+    else:
+        return all_points[vertice] 
+    
+
+def computarCaminho(T, pos_inicial, pos_final,all_points,V):
+    v_inicial = verticeMaisProximo(all_points,pos_inicial,V)
+    v_final = verticeMaisProximo(all_points,pos_final,V)
+
+    if(v_inicial == v_final):
+        print("Os pontos coincidem")
+
+    else:
+        T.achar_caminho(v_inicial,v_final,all_points)
+
 
 #--------------------------------funções para leitura e montar arestas com visada---------------------
 def read_point(file):
@@ -249,15 +288,16 @@ def lerVertices(file,n_obstacles):
 def Main():
     file = open("input",'r')
 
-    start = read_point(file)
-    goal = read_point(file)
+    start = read_point(file) #ponto de partida do arquivo
+    goal = read_point(file) #ponto final do arquivo
     
     n_obstacles = file.readline()
     n_obstacles = int(n_obstacles)
 
-    V = lerVertices(file,n_obstacles) #Vertices relacionados com os obstaculos
+    V = lerVertices(file,n_obstacles) #Vertices agrupados com os obstaculos respectivos
 
-    all_points = build_list(start,goal,V) #lista de todos os pontos sem distinção de obstaculo
+    all_points = build_list(start,goal,V) #lista de todos os vertices sem distinção de obstaculo
+
     print("Lista de vértices: ")
     for i in range (0,len(all_points)):
         print(i,all_points[i])
@@ -265,18 +305,34 @@ def Main():
     G = montarGrafoVisibilidade(all_points,V) #G se torna uma lista de todas as arestas existentes
     G.sort(key=lambda x:x[2]) #ordena as arestas pelo peso
 
-    T = mstPrim(G,all_points,start)
+    T_prim = mstPrim(G,all_points,start)
 
     print("\n\nLISTA DE ARESTAS PARA A ÁRVORE DE PRIM\n")
     i = 0
-    for vertice in T.lista_adjacencias:
+    for vertice in T_prim.lista_adjacencias:
         print(i,all_points[i], "SE CONECTA com:")
         for conexao in vertice:
             print(conexao[0],conexao[1])
         print("Indo para o proximo vertice...\n")
         i += 1
-    print("O caminho é: ")
-    T.achar_caminho(start,goal,all_points)
+
+
+    print("Caminhos com goal e start fornecidos pelo arquivo: ")
+    #Achar caminho usando start e goal do arquivo:
+    print("Árvore de Prim")
+    computarCaminho(T_prim,start,goal,all_points,V)
+
+    #Achar caminho com ponto fornecido pelo usuário
+
+    xo = float(input("Indique a coordenada X(Float) do ponto que deseja começar: "))
+    yo = float(input("Indique a coordenada Y(Float) do ponto que deseja começar: "))
+    start = geometry.Point(xo,yo)
+    print()
+    xf = float(input("Indique a coordenada X(Float) do ponto que deseja alcançar: "))
+    yf = float(input("Indique a coordenada Y(Float) do ponto que deseja alcançar: "))
+    goal = geometry.Point(xf,yf)
     
+    computarCaminho(T_prim,start,goal,all_points,V)
+
 
 Main()
